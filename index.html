@@ -6,7 +6,7 @@
     name="viewport"
     content="width=device-width, initial-scale=1.0"
   />
-  <title>Árbol de decisiones</title>
+  <title>Toma de decisiones</title>
 
   <style>
     * {
@@ -558,7 +558,7 @@
 
     const plantillaDecisiones = {
       name: NOMBRE_CONTEXTO_DECISIONES,
-      title: "Decisiones sobre seguro del negocio de grooming",
+      title: "Seguro para el negocio",
       collections: [
         {
           name: NOMBRE_COLECCION_DECISIONES,
@@ -583,7 +583,7 @@
 
     const plantillaProyeccion = {
       name: NOMBRE_CONTEXTO_PROYECCION,
-      title: "Proyección del negocio de grooming a 5 años",
+      title: "Proyección del negocio a 5 años",
       collections: [
         {
           name: NOMBRE_COLECCION_PROYECCION,
@@ -704,7 +704,7 @@
         return crearComponente({
           type: "caseTable",
           name: NOMBRE_TABLA_DECISIONES,
-          title: "Decisiones sobre seguro de grooming",
+          title: "Registro de decisiones",
           dataContext: NOMBRE_CONTEXTO_DECISIONES
         });
       });
@@ -927,7 +927,7 @@
           etiqueta: "Inicio",
           titulo: "Decisión sobre el seguro del negocio",
           pregunta:
-            "Inviertes para iniciar un negocio de grooming para mascotas en un local físico. Una compañía de seguros te ofrece asegurar tu local. ¿Lo tomarías?",
+            "Inviertes para iniciar un negocio de grooming para mascotas en un local físico. Una compañía de seguros te ofrece asegurar tu local, ¿lo tomarías?",
           opciones: [
             {
               texto: "Sí, lo tomaría",
@@ -1030,7 +1030,7 @@
           etiqueta: "Información financiera",
           titulo: "Gastos y ganancias del negocio",
           pregunta:
-            "Los gastos mensuales del local —arriendo, pago de servicios y otros— equivalen a $450.000.\n\nTu inversión inicial para instalar y habilitar el negocio fue de $3.000.000.\n\nEl negocio proyecta una ganancia neta —lo que queda después de pagar los gastos— con un promedio mensual de $900.000.\n\n¿Tomarías el seguro?",
+            "Los gastos mensuales del local (arriendo, pago de servicios y otros) equivalen a $450.000.\n\nTu inversión inicial para instalar y habilitar el negocio fue de $3.000.000.\n\nEl negocio proyecta una ganancia neta (lo que queda después de pagar los gastos) con un promedio mensual de $900.000.\n\n¿Tomarías el seguro?",
           opciones: [
             {
               texto: "Sí, lo tomaría",
@@ -1049,7 +1049,7 @@
           etiqueta: "Información financiera",
           titulo: "Gastos y ganancias del negocio",
           pregunta:
-            "Los gastos mensuales del local —arriendo, pago de servicios y otros— equivalen a $450.000.\n\nTu inversión inicial para instalar y habilitar el negocio fue de $3.000.000.\n\nEl negocio proyecta una ganancia neta —lo que queda después de pagar los gastos— con un promedio mensual de $900.000.\n\n¿Tomarías el seguro?",
+            "Los gastos mensuales del local (arriendo, pago de servicios y otros) equivalen a $450.000.\n\nTu inversión inicial para instalar y habilitar el negocio fue de $3.000.000.\n\nEl negocio proyecta una ganancia neta (lo que queda después de pagar los gastos) con un promedio mensual de $900.000.\n\n¿Tomarías el seguro?",
           opciones: [
             {
               texto: "Sí, lo tomaría",
@@ -1199,7 +1199,7 @@
           etiqueta: "Información sobre riesgos",
           titulo: "Riesgos del sector",
           pregunta:
-            "En el sector donde estará el local comercial de tu futuro negocio, se sabe que:\n\n• Se reporta una tasa promedio mensual de 20% de robos menores.\n• Se reporta una tasa promedio mensual de 10% de robos mayores.\n• Se reporta una tasa promedio anual de 5% de siniestros catastróficos —incendios, inundaciones u otros—.\n\n¿Tomarías el seguro?",
+            "En el sector donde estará el local comercial de tu futuro negocio, se sabe que:\n\n• Se reporta una tasa promedio mensual de 20% de robos menores.\n• Se reporta una tasa promedio mensual de 10% de robos mayores.\n• Se reporta una tasa promedio anual de 5% de siniestros catastróficos (incendios, inundaciones u otros).\n\n¿Tomarías el seguro?",
           opciones: [
             {
               texto: "Sí, tomaría un seguro",
