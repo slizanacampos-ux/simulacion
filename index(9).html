@@ -1,0 +1,2432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <title>Árbol de decisiones</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --azul: #526d82;
+      --azul-oscuro: #27374d;
+      --fondo: #eef2f5;
+      --borde: #cfd8dc;
+      --verde-fondo: #e8f5e9;
+      --verde-texto: #2e7d32;
+      --amarillo-fondo: #fff3cd;
+      --amarillo-texto: #856404;
+      --rojo-fondo: #ffebee;
+      --rojo-texto: #b71c1c;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 20px;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--fondo);
+      color: #263238;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .contenedor {
+      width: 100%;
+      max-width: 760px;
+      padding: 28px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+
+    .estado-codap {
+      margin-bottom: 20px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: var(--amarillo-fondo);
+      color: var(--amarillo-texto);
+      font-size: 14px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .estado-codap.conectado {
+      background: var(--verde-fondo);
+      color: var(--verde-texto);
+    }
+
+    .estado-codap.error {
+      background: var(--rojo-fondo);
+      color: var(--rojo-texto);
+    }
+
+    .etiqueta {
+      margin-bottom: 10px;
+      color: var(--azul);
+      font-size: 14px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      margin: 0 0 18px;
+      color: var(--azul-oscuro);
+      font-size: 28px;
+    }
+
+    .pregunta {
+      margin-bottom: 26px;
+      font-size: 19px;
+      line-height: 1.55;
+      white-space: pre-line;
+    }
+
+    .opciones {
+      display: grid;
+      gap: 14px;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px 16px;
+      border: 2px solid var(--azul);
+      border-radius: 10px;
+      background: #ffffff;
+      color: #263238;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, transform 0.2s;
+    }
+
+    button:hover:not(:disabled) {
+      background: var(--azul);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .resultado {
+      padding: 18px;
+      border-left: 5px solid var(--azul);
+      border-radius: 10px;
+      background: #e8f1f5;
+      font-size: 18px;
+      line-height: 1.5;
+    }
+
+    .recorrido {
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px solid var(--borde);
+    }
+
+    .recorrido h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .recorrido ol {
+      margin: 0;
+      padding-left: 22px;
+      line-height: 1.7;
+    }
+
+    .justificacion {
+      margin-top: 24px;
+    }
+
+    .justificacion label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 17px;
+      font-weight: bold;
+    }
+
+    .justificacion textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 14px;
+      border: 2px solid #b0bec5;
+      border-radius: 10px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      resize: vertical;
+    }
+
+    .justificacion textarea:focus {
+      border-color: var(--azul);
+      outline: none;
+    }
+
+    .boton-principal {
+      margin-top: 16px;
+      background: var(--azul);
+      color: #ffffff;
+    }
+
+    .boton-secundario {
+      margin-top: 12px;
+    }
+
+    .mensaje {
+      display: none;
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+
+    .mensaje.exito {
+      display: block;
+      background: var(--verde-fondo);
+      color: var(--verde-texto);
+    }
+
+    .mensaje.error {
+      display: block;
+      background: var(--rojo-fondo);
+      color: var(--rojo-texto);
+    }
+
+    .detalle-sesion {
+      margin-top: 20px;
+      color: #607d8b;
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .diagrama-arbol {
+      margin-top: 26px;
+      padding-top: 20px;
+      border-top: 1px solid var(--borde);
+    }
+
+    .diagrama-encabezado {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .diagrama-encabezado h2 {
+      margin: 0 0 4px;
+      color: var(--azul-oscuro);
+      font-size: 19px;
+    }
+
+    .diagrama-encabezado p {
+      margin: 0;
+      color: #607d8b;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .leyenda-ruta {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: #edf4f7;
+      color: var(--azul-oscuro);
+      font-size: 12px;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .leyenda-ruta::before {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--azul);
+      content: "";
+    }
+
+    .diagrama-viewport {
+      width: 100%;
+      max-height: 410px;
+      overflow: auto;
+      border: 1px solid #d9e1e5;
+      border-radius: 12px;
+      background:
+        linear-gradient(#f8fafb 1px, transparent 1px),
+        linear-gradient(90deg, #f8fafb 1px, transparent 1px),
+        #ffffff;
+      background-size: 24px 24px;
+    }
+
+    .diagrama-viewport svg {
+      display: block;
+      min-width: 100%;
+    }
+
+    .arista {
+      fill: none;
+      stroke: #aebbc2;
+      stroke-width: 2;
+    }
+
+    .arista.seleccionada {
+      stroke: var(--azul);
+      stroke-width: 4;
+    }
+
+    .arista.disponible {
+      stroke: #9fb2bc;
+      stroke-dasharray: 7 6;
+    }
+
+    .arista.atenuada {
+      stroke: #bcc8ce;
+      stroke-width: 2;
+      opacity: 0.75;
+    }
+
+    .etiqueta-arista-fondo {
+      fill: #ffffff;
+      stroke: #d9e1e5;
+      stroke-width: 1;
+    }
+
+    .etiqueta-arista-texto {
+      fill: #455a64;
+      font-size: 12px;
+      font-weight: bold;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    .grupo-arista.atenuada {
+      opacity: 0.34;
+    }
+
+    .nodo-diagrama rect {
+      fill: #ffffff;
+      stroke: #8fa3ad;
+      stroke-width: 2;
+    }
+
+    .nodo-diagrama text {
+      fill: #263238;
+      font-size: 11px;
+      font-weight: bold;
+      text-anchor: middle;
+    }
+
+    .nodo-diagrama.seleccionado rect {
+      fill: #e8f1f5;
+      stroke: var(--azul);
+      stroke-width: 4;
+    }
+
+    .nodo-diagrama.actual rect {
+      fill: #dcecf3;
+      stroke: var(--azul-oscuro);
+      stroke-width: 4;
+    }
+
+    .nodo-diagrama.final rect {
+      fill: #eef7ee;
+      stroke: #5f8b62;
+    }
+
+    .nodo-diagrama.final.seleccionado rect {
+      fill: #dff0df;
+      stroke: #2e7d32;
+    }
+
+    .nodo-diagrama.oculto rect {
+      fill: #ffffff;
+      stroke: #9fb2bc;
+      stroke-width: 2;
+      stroke-dasharray: 6 4;
+    }
+
+    .nodo-diagrama.oculto text {
+      fill: #607d8b;
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    .nodo-diagrama.oculto.actual rect {
+      fill: #dcecf3;
+      stroke: var(--azul-oscuro);
+    }
+
+    .nodo-diagrama.atenuado {
+      opacity: 0.34;
+    }
+
+    @media (max-width: 620px) {
+      .contenedor {
+        padding: 20px;
+      }
+
+      .diagrama-encabezado {
+        display: block;
+      }
+
+      .leyenda-ruta {
+        display: inline-flex;
+        margin-top: 10px;
+      }
+    }
+
+    .proyeccion-panel {
+      margin-top: 24px;
+      padding: 20px;
+      border: 1px solid #d7e1e6;
+      border-radius: 14px;
+      background: #f8fbfc;
+    }
+
+    .proyeccion-panel h2 {
+      margin: 0 0 8px;
+      color: var(--azul-oscuro);
+      font-size: 21px;
+    }
+
+    .proyeccion-explicacion {
+      margin: 0 0 18px;
+      color: #546e7a;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .resumen-proyeccion {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .dato-proyeccion {
+      padding: 13px;
+      border-radius: 10px;
+      background: #ffffff;
+      border: 1px solid #dce5e9;
+    }
+
+    .dato-proyeccion span {
+      display: block;
+      margin-bottom: 5px;
+      color: #607d8b;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .dato-proyeccion strong {
+      color: var(--azul-oscuro);
+      font-size: 18px;
+    }
+
+    .dato-proyeccion.destacado {
+      grid-column: 1 / -1;
+      background: #e8f1f5;
+      border-color: #bdd0d9;
+    }
+
+    .dato-proyeccion.destacado strong {
+      font-size: 24px;
+    }
+
+    .supuestos-proyeccion {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 9px;
+      background: #fff8e1;
+      color: #6d5a19;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .acciones-proyeccion {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .estado-proyeccion {
+      min-height: 20px;
+      margin-top: 12px;
+      color: #546e7a;
+      font-size: 13px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    @media (max-width: 620px) {
+      .resumen-proyeccion,
+      .acciones-proyeccion {
+        grid-template-columns: 1fr;
+      }
+
+      .dato-proyeccion.destacado {
+        grid-column: auto;
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+  <main class="contenedor">
+    <div id="estadoCodap" class="estado-codap">
+      Conectando con CODAP...
+    </div>
+
+    <div id="contenido"></div>
+  </main>
+
+  <!-- Bibliotecas oficiales utilizadas por los plugins estáticos de CODAP -->
+  <script src="https://concord-consortium.github.io/codap-data-interactives/Common/js/iframe-phone.js"></script>
+  <script src="https://concord-consortium.github.io/codap-data-interactives/Common/js/CodapInterface.js"></script>
+
+  <script>
+    "use strict";
+
+    /* =========================================================
+       1. CONFIGURACIÓN DE CODAP
+       ========================================================= */
+
+    const NOMBRE_PLUGIN = "ArbolDecisionesPlugin";
+    const TITULO_PLUGIN = "Árbol de decisiones";
+
+    const NOMBRE_CONTEXTO_DECISIONES = "SeguroGroomingV4";
+    const NOMBRE_COLECCION_DECISIONES = "Decisiones";
+    const NOMBRE_TABLA_DECISIONES = "TablaSeguroGroomingV4";
+
+    const NOMBRE_CONTEXTO_PROYECCION = "ProyeccionGroomingV1";
+    const NOMBRE_COLECCION_PROYECCION = "Proyeccion";
+    const NOMBRE_TABLA_PROYECCION = "TablaProyeccionGrooming";
+    const NOMBRE_GRAFICO_PROYECCION = "GraficoProyeccionGrooming";
+
+    /*
+      Supuestos editables de la simulación.
+      Los montos de las pérdidas no estaban definidos en el escenario,
+      por lo que se establecen aquí para que puedan modificarse fácilmente.
+    */
+    const CONFIG_PROYECCION = Object.freeze({
+      meses: 60,
+      inversionInicial: 3000000,
+      gananciaNetaMensual: 900000,
+      probRoboMenorMensual: 0.20,
+      probRoboMayorMensual: 0.10,
+      probSiniestroAnual: 0.05,
+      perdidaRoboMenor: 300000,
+      perdidaRoboMayor: 1500000,
+      perdidaSiniestro: 5000000,
+      topeParcialPorEvento: 2000000
+    });
+
+    const PLANES = Object.freeze({
+      full: {
+        clave: "full",
+        nombre: "Seguro full",
+        primaMensual: 80000
+      },
+      parcial: {
+        clave: "parcial",
+        nombre: "Seguro parcial",
+        primaMensual: 40000
+      },
+      ninguno: {
+        clave: "ninguno",
+        nombre: "Sin seguro",
+        primaMensual: 0
+      }
+    });
+
+    const plantillaDecisiones = {
+      name: NOMBRE_CONTEXTO_DECISIONES,
+      title: "Decisiones sobre seguro del negocio de grooming",
+      collections: [
+        {
+          name: NOMBRE_COLECCION_DECISIONES,
+          title: "Decisiones",
+          attrs: [
+            { name: "Sesion", type: "categorical" },
+            { name: "TipoRegistro", type: "categorical" },
+            { name: "Paso", type: "numeric" },
+            { name: "Nodo", type: "categorical" },
+            { name: "Pregunta", type: "categorical" },
+            { name: "Eleccion", type: "categorical" },
+            { name: "NodoSiguiente", type: "categorical" },
+            { name: "ResultadoFinal", type: "categorical" },
+            { name: "RutaCompleta", type: "categorical" },
+            { name: "PlanFinal", type: "categorical" },
+            { name: "TiempoSegundos", type: "numeric" },
+            { name: "FechaHora", type: "date" }
+          ]
+        }
+      ]
+    };
+
+    const plantillaProyeccion = {
+      name: NOMBRE_CONTEXTO_PROYECCION,
+      title: "Proyección del negocio de grooming a 5 años",
+      collections: [
+        {
+          name: NOMBRE_COLECCION_PROYECCION,
+          title: "Proyección mensual",
+          attrs: [
+            { name: "Sesion", type: "categorical" },
+            { name: "Simulacion", type: "categorical" },
+            { name: "Mes", type: "numeric" },
+            { name: "Anio", type: "numeric" },
+            { name: "Plan", type: "categorical" },
+            { name: "GananciaNeta", type: "numeric" },
+            { name: "Prima", type: "numeric" },
+            { name: "Evento", type: "categorical" },
+            { name: "PerdidaBruta", type: "numeric" },
+            { name: "Cobertura", type: "numeric" },
+            { name: "PerdidaNegocio", type: "numeric" },
+            { name: "SaldoAcumulado", type: "numeric" }
+          ]
+        }
+      ]
+    };
+
+    let codapListo = false;
+    let colaRegistros = [];
+    let enviandoCola = false;
+
+    function mostrarEstadoCodap(mensaje, tipo) {
+      const estado = document.getElementById("estadoCodap");
+      estado.style.display = "block";
+      estado.textContent = mensaje;
+      estado.className = "estado-codap";
+
+      if (tipo) {
+        estado.classList.add(tipo);
+      }
+    }
+
+    function obtenerContexto(nombreContexto) {
+      return codapInterface.sendRequest({
+        action: "get",
+        resource: "dataContext[" + nombreContexto + "]"
+      });
+    }
+
+    function crearContexto(plantilla) {
+      return codapInterface.sendRequest({
+        action: "create",
+        resource: "dataContext",
+        values: plantilla
+      });
+    }
+
+    function asegurarContexto(nombreContexto, plantilla) {
+      return obtenerContexto(nombreContexto).then(function(resultado) {
+        if (resultado && resultado.success) {
+          return resultado;
+        }
+
+        return crearContexto(plantilla).then(function(resultadoCreacion) {
+          if (!resultadoCreacion || !resultadoCreacion.success) {
+            throw new Error(
+              "CODAP no pudo crear el contexto " + nombreContexto + "."
+            );
+          }
+
+          return resultadoCreacion;
+        });
+      });
+    }
+
+    function obtenerComponentes() {
+      return codapInterface.sendRequest({
+        action: "get",
+        resource: "componentList"
+      }).then(function(resultado) {
+        if (!resultado || !resultado.success) {
+          throw new Error("No se pudo consultar la lista de componentes.");
+        }
+
+        return Array.isArray(resultado.values)
+          ? resultado.values
+          : [];
+      });
+    }
+
+    function componenteExiste(componentes, nombre, tipo) {
+      return componentes.some(function(componente) {
+        return componente.name === nombre && componente.type === tipo;
+      });
+    }
+
+    function crearComponente(valores) {
+      return codapInterface.sendRequest({
+        action: "create",
+        resource: "component",
+        values: valores
+      }).then(function(resultado) {
+        if (!resultado || !resultado.success) {
+          throw new Error(
+            "CODAP no pudo crear el componente " + valores.name + "."
+          );
+        }
+
+        return resultado;
+      });
+    }
+
+    function asegurarComponentes() {
+      return obtenerComponentes().then(function(componentes) {
+        const tareas = [];
+
+        if (!componenteExiste(
+          componentes,
+          NOMBRE_TABLA_DECISIONES,
+          "caseTable"
+        )) {
+          tareas.push(
+            crearComponente({
+              type: "caseTable",
+              name: NOMBRE_TABLA_DECISIONES,
+              title: "Decisiones sobre seguro de grooming",
+              dataContext: NOMBRE_CONTEXTO_DECISIONES,
+              dimensions: { width: 620, height: 300 },
+              position: "bottom"
+            })
+          );
+        }
+
+        if (!componenteExiste(
+          componentes,
+          NOMBRE_TABLA_PROYECCION,
+          "caseTable"
+        )) {
+          tareas.push(
+            crearComponente({
+              type: "caseTable",
+              name: NOMBRE_TABLA_PROYECCION,
+              title: "Proyección mensual a 5 años",
+              dataContext: NOMBRE_CONTEXTO_PROYECCION,
+              dimensions: { width: 680, height: 320 },
+              position: "bottom"
+            })
+          );
+        }
+
+        if (!componenteExiste(
+          componentes,
+          NOMBRE_GRAFICO_PROYECCION,
+          "graph"
+        )) {
+          tareas.push(
+            crearComponente({
+              type: "graph",
+              name: NOMBRE_GRAFICO_PROYECCION,
+              title: "Saldo acumulado en 5 años",
+              dataContext: NOMBRE_CONTEXTO_PROYECCION,
+              dimensions: { width: 560, height: 380 },
+              position: "bottom",
+              xAttributeName: "Mes",
+              yAttributeName: "SaldoAcumulado",
+              legendAttributeName: "Simulacion",
+              enableNumberToggle: false,
+              pointSize: 0.7
+            })
+          );
+        }
+
+        return Promise.all(tareas);
+      });
+    }
+
+    function enviarRegistroDecisionAhora(registro) {
+      return codapInterface.sendRequest({
+        action: "create",
+        resource:
+          "dataContext[" +
+          NOMBRE_CONTEXTO_DECISIONES +
+          "].item",
+        values: [registro]
+      }).then(function(resultado) {
+        if (!resultado || !resultado.success) {
+          throw new Error("CODAP rechazó el registro de decisión.");
+        }
+
+        return resultado;
+      });
+    }
+
+    function agregarRegistroACola(registro) {
+      colaRegistros.push(registro);
+      procesarCola();
+    }
+
+    function procesarCola() {
+      if (!codapListo || enviandoCola || colaRegistros.length === 0) {
+        return Promise.resolve();
+      }
+
+      enviandoCola = true;
+      const registro = colaRegistros[0];
+
+      return enviarRegistroDecisionAhora(registro)
+        .then(function() {
+          colaRegistros.shift();
+          enviandoCola = false;
+          return procesarCola();
+        })
+        .catch(function(error) {
+          enviandoCola = false;
+          console.error("Error al guardar en CODAP:", error);
+          mostrarEstadoCodap(
+            "Conectado, pero ocurrió un error al guardar un registro.",
+            "error"
+          );
+          throw error;
+        });
+    }
+
+    function guardarProyeccionEnCodap(datos) {
+      if (!codapListo) {
+        return Promise.reject(
+          new Error("CODAP todavía no está listo para guardar la proyección.")
+        );
+      }
+
+      return codapInterface.sendRequest({
+        action: "create",
+        resource:
+          "dataContext[" +
+          NOMBRE_CONTEXTO_PROYECCION +
+          "].item",
+        values: datos
+      }).then(function(resultado) {
+        if (!resultado || !resultado.success) {
+          throw new Error("CODAP rechazó los datos de la proyección.");
+        }
+
+        return resultado;
+      });
+    }
+
+    function iniciarCodap() {
+      if (typeof codapInterface === "undefined") {
+        mostrarEstadoCodap(
+          "No fue posible cargar las bibliotecas de CODAP.",
+          "error"
+        );
+        return;
+      }
+
+      codapInterface.init({
+        name: NOMBRE_PLUGIN,
+        title: TITULO_PLUGIN,
+        dimensions: {
+          width: 880,
+          height: 820
+        },
+        version: "1.0"
+      })
+      .then(function() {
+        mostrarEstadoCodap("Preparando las tablas y el gráfico...");
+
+        return Promise.all([
+          asegurarContexto(
+            NOMBRE_CONTEXTO_DECISIONES,
+            plantillaDecisiones
+          ),
+          asegurarContexto(
+            NOMBRE_CONTEXTO_PROYECCION,
+            plantillaProyeccion
+          )
+        ]);
+      })
+      .then(function() {
+        return asegurarComponentes();
+      })
+      .then(function() {
+        codapListo = true;
+        mostrarEstadoCodap(
+          "Conectado correctamente con CODAP.",
+          "conectado"
+        );
+
+        setTimeout(function() {
+          const estado = document.getElementById("estadoCodap");
+
+          if (estado.classList.contains("conectado")) {
+            estado.style.display = "none";
+          }
+        }, 1200);
+
+        return procesarCola();
+      })
+      .catch(function(error) {
+        console.error("Error al iniciar CODAP:", error);
+        mostrarEstadoCodap(
+          "No fue posible preparar las tablas o el gráfico de CODAP.",
+          "error"
+        );
+      });
+
+      setTimeout(function() {
+        if (!codapListo) {
+          const conexionActiva =
+            typeof codapInterface.getConnectionState === "function" &&
+            codapInterface.getConnectionState() === "active";
+
+          if (!conexionActiva) {
+            mostrarEstadoCodap(
+              "Esta página debe abrirse dentro de CODAP.",
+              "error"
+            );
+          }
+        }
+      }, 6000);
+    }
+
+    /* =========================================================
+       2. CONTENIDO DEL ÁRBOL
+       Para cambiar preguntas o ramas, modifica este objeto.
+       ========================================================= */
+
+    function crearArbolDeDecisiones() {
+      return {
+        inicio: {
+          tipo: "decision",
+          etiqueta: "Inicio",
+          titulo: "Decisión sobre el seguro del negocio",
+          pregunta:
+            "Inviertes para iniciar un negocio de grooming para mascotas en un local físico. Una compañía de seguros te ofrece asegurar tu local. ¿Lo tomarías?",
+          opciones: [
+            {
+              texto: "Sí, lo tomaría",
+              siguiente: "seleccionSeguroInicial"
+            },
+            {
+              texto: "No lo tomaría",
+              siguiente: "reconsiderarNoSeguro"
+            },
+            {
+              texto:
+                "Necesito más información sobre los gastos y ganancias del negocio antes de tomar una decisión",
+              siguiente: "informacionFinancieraDirecta"
+            }
+          ]
+        },
+
+        reconsiderarNoSeguro: {
+          tipo: "decision",
+          etiqueta: "Reconsideración",
+          titulo: "Consecuencia de no contratar un seguro",
+          pregunta:
+            "Si el negocio sufre algún tipo de daño, deberás realizar una nueva inversión. ¿Mantienes tu decisión o prefieres conocer más sobre las ganancias y gastos del negocio antes de tomar una decisión?",
+          opciones: [
+            {
+              texto: "Conservo mi decisión, no tomaría un seguro",
+              siguiente: "finalSinSeguro"
+            },
+            {
+              texto:
+                "Prefiero conocer más sobre las ganancias y gastos del negocio antes de tomar una decisión",
+              siguiente: "informacionFinancieraConEleccion"
+            }
+          ]
+        },
+
+        seleccionSeguroInicial: {
+          tipo: "decision",
+          etiqueta: "Elección del seguro",
+          titulo: "Tipo de seguro",
+          pregunta:
+            "Has decidido considerar la contratación de un seguro. ¿Cuál escogerías?",
+          opciones: [
+            {
+              texto: "Seguro full",
+              siguiente: "primaFullAntesFinanzas"
+            },
+            {
+              texto: "Seguro parcial",
+              siguiente: "primaParcialAntesFinanzas"
+            },
+            {
+              texto:
+                "Necesito más información sobre los gastos y ganancias del negocio antes de tomar una decisión",
+              siguiente: "informacionFinancieraConEleccion"
+            }
+          ]
+        },
+
+        primaFullAntesFinanzas: {
+          tipo: "decision",
+          etiqueta: "Seguro full",
+          titulo: "Prima mensual del seguro full",
+          pregunta:
+            "Debes pagar una prima mensual de $80.000. ¿Quieres continuar o prefieres tener más información?",
+          opciones: [
+            {
+              texto: "Sí, tomaré este seguro",
+              siguiente: "finalSeguroFull"
+            },
+            {
+              texto:
+                "No, necesito más información sobre los gastos y ganancias del negocio antes de tomar una decisión",
+              siguiente: "informacionFinancieraConEleccion"
+            }
+          ]
+        },
+
+        primaParcialAntesFinanzas: {
+          tipo: "decision",
+          etiqueta: "Seguro parcial",
+          titulo: "Prima mensual del seguro parcial",
+          pregunta:
+            "Debes pagar una prima mensual de $40.000. ¿Quieres continuar o prefieres tener más información?",
+          opciones: [
+            {
+              texto: "Sí, tomaré este seguro",
+              siguiente: "finalSeguroParcial"
+            },
+            {
+              texto:
+                "No, necesito más información sobre los gastos y ganancias del negocio antes de tomar una decisión",
+              siguiente: "informacionFinancieraConEleccion"
+            }
+          ]
+        },
+
+        informacionFinancieraConEleccion: {
+          tipo: "decision",
+          etiqueta: "Información financiera",
+          titulo: "Gastos y ganancias del negocio",
+          pregunta:
+            "Los gastos mensuales del local —arriendo, pago de servicios y otros— equivalen a $450.000.\n\nTu inversión inicial para instalar y habilitar el negocio fue de $3.000.000.\n\nEl negocio proyecta una ganancia neta —lo que queda después de pagar los gastos— con un promedio mensual de $900.000.\n\n¿Tomarías el seguro?",
+          opciones: [
+            {
+              texto: "Sí, lo tomaría",
+              siguiente: "seleccionSeguroTrasFinanzas"
+            },
+            {
+              texto:
+                "No, necesito información sobre lo que ofrecen los seguros antes de tomar una decisión",
+              siguiente: "informacionCoberturas"
+            }
+          ]
+        },
+
+        informacionFinancieraDirecta: {
+          tipo: "decision",
+          etiqueta: "Información financiera",
+          titulo: "Gastos y ganancias del negocio",
+          pregunta:
+            "Los gastos mensuales del local —arriendo, pago de servicios y otros— equivalen a $450.000.\n\nTu inversión inicial para instalar y habilitar el negocio fue de $3.000.000.\n\nEl negocio proyecta una ganancia neta —lo que queda después de pagar los gastos— con un promedio mensual de $900.000.\n\n¿Tomarías el seguro?",
+          opciones: [
+            {
+              texto: "Sí, lo tomaría",
+              siguiente: "seleccionSeguroTrasFinanzas"
+            },
+            {
+              texto:
+                "No, necesito información sobre lo que ofrecen los seguros antes de tomar una decisión",
+              siguiente: "informacionCoberturas"
+            }
+          ]
+        },
+
+        seleccionSeguroTrasFinanzas: {
+          tipo: "decision",
+          etiqueta: "Elección del seguro",
+          titulo: "Tipo de seguro",
+          pregunta:
+            "Considerando los gastos y ganancias del negocio, ¿qué seguro escogerías?",
+          opciones: [
+            {
+              texto: "Seguro full",
+              siguiente: "primaFullTrasFinanzas"
+            },
+            {
+              texto: "Seguro parcial",
+              siguiente: "primaParcialTrasFinanzas"
+            }
+          ]
+        },
+
+        primaFullTrasFinanzas: {
+          tipo: "decision",
+          etiqueta: "Seguro full",
+          titulo: "Prima mensual del seguro full",
+          pregunta:
+            "Debes pagar una prima mensual de $80.000. ¿Quieres continuar o prefieres tener más información?",
+          opciones: [
+            {
+              texto: "Sí, quiero tomar este seguro",
+              siguiente: "finalSeguroFull"
+            },
+            {
+              texto:
+                "No, necesito información sobre lo que ofrecen los seguros antes de tomar una decisión",
+              siguiente: "informacionCoberturas"
+            }
+          ]
+        },
+
+        primaParcialTrasFinanzas: {
+          tipo: "decision",
+          etiqueta: "Seguro parcial",
+          titulo: "Prima mensual del seguro parcial",
+          pregunta:
+            "Debes pagar una prima mensual de $40.000. ¿Quieres continuar o prefieres tener más información?",
+          opciones: [
+            {
+              texto: "Sí, quiero tomar este seguro",
+              siguiente: "finalSeguroParcial"
+            },
+            {
+              texto:
+                "No, necesito información sobre lo que ofrecen los seguros antes de tomar una decisión",
+              siguiente: "informacionCoberturas"
+            }
+          ]
+        },
+
+        informacionCoberturas: {
+          tipo: "decision",
+          etiqueta: "Información sobre seguros",
+          titulo: "Coberturas ofrecidas",
+          pregunta:
+            "La compañía te ofrece dos tipos de seguros:\n\n• Seguro full: prima mensual de $80.000. Cubre la pérdida total por daños en la infraestructura del local y, además, daños o pérdidas de las mercancías por concepto de robo o siniestros.\n\n• Seguro parcial: prima mensual de $40.000. Cubre pérdidas por daños en la infraestructura, o bien daños o pérdidas en las mercancías por concepto de robos o siniestros, con un tope máximo de $2.000.000.\n\n¿Tomarías alguno de los seguros?",
+          opciones: [
+            {
+              texto: "Sí, tomaría un seguro",
+              siguiente: "seleccionSeguroTrasCoberturas"
+            },
+            {
+              texto:
+                "No, necesito información sobre los riesgos a los que está expuesto el negocio antes de tomar una decisión",
+              siguiente: "informacionRiesgos"
+            }
+          ]
+        },
+
+        seleccionSeguroTrasCoberturas: {
+          tipo: "decision",
+          etiqueta: "Elección del seguro",
+          titulo: "Tipo de seguro",
+          pregunta:
+            "Ahora que conoces las coberturas, ¿qué seguro escogerías?",
+          opciones: [
+            {
+              texto: "Seguro full",
+              siguiente: "primaFullTrasCoberturas"
+            },
+            {
+              texto: "Seguro parcial",
+              siguiente: "primaParcialTrasCoberturas"
+            }
+          ]
+        },
+
+        primaFullTrasCoberturas: {
+          tipo: "decision",
+          etiqueta: "Seguro full",
+          titulo: "Prima mensual del seguro full",
+          pregunta:
+            "Debes pagar una prima mensual de $80.000. ¿Quieres continuar o prefieres tener más información?",
+          opciones: [
+            {
+              texto: "Sí, tomaré un seguro",
+              siguiente: "finalSeguroFull"
+            },
+            {
+              texto:
+                "No, necesito información sobre los riesgos a los que está expuesto el negocio antes de tomar una decisión",
+              siguiente: "informacionRiesgos"
+            }
+          ]
+        },
+
+        primaParcialTrasCoberturas: {
+          tipo: "decision",
+          etiqueta: "Seguro parcial",
+          titulo: "Prima mensual del seguro parcial",
+          pregunta:
+            "Debes pagar una prima mensual de $40.000. ¿Quieres continuar o prefieres tener más información?",
+          opciones: [
+            {
+              texto: "Sí, tomaré un seguro",
+              siguiente: "finalSeguroParcial"
+            },
+            {
+              texto:
+                "No, necesito información sobre los riesgos a los que está expuesto el negocio antes de tomar una decisión",
+              siguiente: "informacionRiesgos"
+            }
+          ]
+        },
+
+        informacionRiesgos: {
+          tipo: "decision",
+          etiqueta: "Información sobre riesgos",
+          titulo: "Riesgos del sector",
+          pregunta:
+            "En el sector donde estará el local comercial de tu futuro negocio, se sabe que:\n\n• Se reporta una tasa promedio mensual de 20% de robos menores.\n• Se reporta una tasa promedio mensual de 10% de robos mayores.\n• Se reporta una tasa promedio anual de 5% de siniestros catastróficos —incendios, inundaciones u otros—.\n\n¿Tomarías el seguro?",
+          opciones: [
+            {
+              texto: "Sí, tomaría un seguro",
+              siguiente: "seleccionSeguroTrasRiesgos"
+            },
+            {
+              texto: "No tomaría un seguro",
+              siguiente: "finalSinSeguro"
+            }
+          ]
+        },
+
+        seleccionSeguroTrasRiesgos: {
+          tipo: "decision",
+          etiqueta: "Elección final del seguro",
+          titulo: "Tipo de seguro",
+          pregunta:
+            "Considerando los riesgos del sector, ¿qué seguro escogerías?",
+          opciones: [
+            {
+              texto: "Seguro full",
+              siguiente: "confirmacionFull"
+            },
+            {
+              texto: "Seguro parcial",
+              siguiente: "confirmacionParcial"
+            }
+          ]
+        },
+
+        confirmacionFull: {
+          tipo: "decision",
+          etiqueta: "Seguro full",
+          titulo: "Confirmación del seguro full",
+          pregunta:
+            "Debes pagar una prima mensual de $80.000.",
+          opciones: [
+            {
+              texto: "OK",
+              siguiente: "finalSeguroFull"
+            }
+          ]
+        },
+
+        confirmacionParcial: {
+          tipo: "decision",
+          etiqueta: "Seguro parcial",
+          titulo: "Confirmación del seguro parcial",
+          pregunta:
+            "Debes pagar una prima mensual de $40.000.",
+          opciones: [
+            {
+              texto: "OK",
+              siguiente: "finalSeguroParcial"
+            }
+          ]
+        },
+
+        finalSeguroFull: {
+          tipo: "final",
+          plan: "full",
+          etiqueta: "Proyección a 5 años",
+          titulo: "Proyección con seguro full",
+          mensaje:
+            "Te invitamos a ver la proyección de tu decisión en 5 años."
+        },
+
+        finalSeguroParcial: {
+          tipo: "final",
+          plan: "parcial",
+          etiqueta: "Proyección a 5 años",
+          titulo: "Proyección con seguro parcial",
+          mensaje:
+            "Te invitamos a ver la proyección de tu decisión en 5 años."
+        },
+
+        finalSinSeguro: {
+          tipo: "final",
+          plan: "ninguno",
+          etiqueta: "Proyección a 5 años",
+          titulo: "Proyección sin seguro",
+          mensaje:
+            "Te invitamos a ver la proyección de tu decisión en 5 años."
+        }
+
+      };
+    }
+
+    const arbol = crearArbolDeDecisiones();
+
+    /* =========================================================
+       3. ESTADO Y NAVEGACIÓN
+       ========================================================= */
+
+    let nodoActual = "inicio";
+    let recorrido = [];
+    let idSesion = crearIdSesion();
+    let inicioNodo = Date.now();
+    let resultadoFinalGuardado = false;
+    let numeroSimulacionSesion = 0;
+    let planFinalActual = null;
+
+    function crearIdSesion() {
+      const parteAleatoria = Math.random()
+        .toString(36)
+        .slice(2, 8)
+        .toUpperCase();
+
+      return "S-" + Date.now() + "-" + parteAleatoria;
+    }
+
+    function fechaHoraISO() {
+      return new Date().toISOString();
+    }
+
+    function tiempoEnNodo() {
+      return Number(((Date.now() - inicioNodo) / 1000).toFixed(2));
+    }
+
+    function escaparHTML(valor) {
+      return String(valor)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function crearRecorridoHTML() {
+      if (recorrido.length === 0) {
+        return "";
+      }
+
+      const elementos = recorrido
+        .map(function(decision) {
+          return "<li>" + escaparHTML(decision.eleccion) + "</li>";
+        })
+        .join("");
+
+      return `
+        <section class="recorrido">
+          <h2>Recorrido realizado</h2>
+          <ol>${elementos}</ol>
+        </section>
+      `;
+    }
+
+
+    /* =========================================================
+       4. DIAGRAMA PROGRESIVO DEL ÁRBOL
+       ========================================================= */
+
+    function obtenerIndiceSeleccionado(nodo, profundidad) {
+      const decision = recorrido[profundidad];
+
+      if (!decision || !nodo.opciones) {
+        return -1;
+      }
+
+      return nodo.opciones.findIndex(function(opcion) {
+        return (
+          opcion.texto === decision.eleccion &&
+          opcion.siguiente === decision.siguiente
+        );
+      });
+    }
+
+    function etiquetaNodoDiagrama(nodoId, oculto) {
+      if (oculto) {
+        return "Nodo siguiente";
+      }
+
+      const nodo = arbol[nodoId];
+
+      if (!nodo) {
+        return nodoId;
+      }
+
+      if (nodo.tipo === "final") {
+        return nodo.mensaje;
+      }
+
+      return nodo.titulo;
+    }
+
+    function construirArbolVisual(mostrarCompleto) {
+      function construir(
+        nodoId,
+        profundidad,
+        clave,
+        perteneceRuta
+      ) {
+        const nodo = arbol[nodoId];
+
+        const visual = {
+          idNodo: nodoId,
+          clave: clave,
+          profundidad: profundidad,
+          perteneceRuta: perteneceRuta,
+          actual: nodoId === nodoActual && perteneceRuta,
+          final: nodo && nodo.tipo === "final",
+          oculto: false,
+          etiqueta: etiquetaNodoDiagrama(nodoId, false),
+          hijos: []
+        };
+
+        if (!nodo || nodo.tipo !== "decision") {
+          return visual;
+        }
+
+        const indiceSeleccionado =
+          obtenerIndiceSeleccionado(nodo, profundidad);
+
+        if (mostrarCompleto) {
+          nodo.opciones.forEach(function(opcion, indice) {
+            const hijoEnRuta =
+              perteneceRuta &&
+              indiceSeleccionado >= 0 &&
+              indice === indiceSeleccionado;
+
+            const hijo = construir(
+              opcion.siguiente,
+              profundidad + 1,
+              clave + "-" + indice,
+              hijoEnRuta
+            );
+
+            hijo.etiqueta = opcion.texto;
+
+            visual.hijos.push({
+              texto: opcion.texto,
+              seleccionada: hijoEnRuta,
+              disponible: false,
+              hijo: hijo
+            });
+          });
+
+          return visual;
+        }
+
+        if (profundidad < recorrido.length) {
+          nodo.opciones.forEach(function(opcion, indice) {
+            const fueSeleccionada =
+              indice === indiceSeleccionado;
+
+            if (fueSeleccionada) {
+              const hijoSeleccionado = construir(
+                opcion.siguiente,
+                profundidad + 1,
+                clave + "-" + indice,
+                true
+              );
+
+              hijoSeleccionado.etiqueta = opcion.texto;
+
+              visual.hijos.push({
+                texto: opcion.texto,
+                seleccionada: true,
+                disponible: false,
+                hijo: hijoSeleccionado
+              });
+
+              return;
+            }
+
+            visual.hijos.push({
+              texto: opcion.texto,
+              seleccionada: false,
+              disponible: false,
+              hijo: {
+                idNodo: opcion.siguiente,
+                clave:
+                  clave +
+                  "-no-seleccionada-" +
+                  indice,
+                profundidad: profundidad + 1,
+                perteneceRuta: false,
+                actual: false,
+                final: false,
+                oculto: true,
+                etiqueta: opcion.texto,
+                hijos: []
+              }
+            });
+          });
+
+          return visual;
+        }
+
+        if (nodoId === nodoActual) {
+          nodo.opciones.forEach(function(opcion, indice) {
+            visual.hijos.push({
+              texto: opcion.texto,
+              seleccionada: false,
+              disponible: true,
+              hijo: {
+                idNodo: opcion.siguiente,
+                clave: clave + "-disponible-" + indice,
+                profundidad: profundidad + 1,
+                perteneceRuta: false,
+                actual: false,
+                final: false,
+                oculto: true,
+                etiqueta: opcion.texto,
+                hijos: []
+              }
+            });
+          });
+        }
+
+        return visual;
+      }
+
+      return construir("inicio", 0, "inicio", true);
+    }
+
+    function asignarPosicionesDiagrama(raiz) {
+      const separacionHorizontal = 180;
+      const separacionVertical = 68;
+      const margenX = 72;
+      const margenY = 48;
+      let indiceHoja = 0;
+      let profundidadMaxima = 0;
+
+      function recorrer(nodo) {
+        profundidadMaxima = Math.max(
+          profundidadMaxima,
+          nodo.profundidad
+        );
+
+        if (nodo.hijos.length === 0) {
+          nodo.x =
+            margenX +
+            nodo.profundidad * separacionHorizontal;
+
+          nodo.y =
+            margenY +
+            indiceHoja * separacionVertical;
+
+          indiceHoja += 1;
+          return;
+        }
+
+        nodo.hijos.forEach(function(arista) {
+          recorrer(arista.hijo);
+        });
+
+        nodo.x =
+          margenX +
+          nodo.profundidad * separacionHorizontal;
+
+        const posicionesY = nodo.hijos.map(function(arista) {
+          return arista.hijo.y;
+        });
+
+        nodo.y =
+          posicionesY.reduce(function(total, y) {
+            return total + y;
+          }, 0) / posicionesY.length;
+      }
+
+      recorrer(raiz);
+
+      return {
+        ancho: Math.max(
+          720,
+          margenX * 2 +
+            profundidadMaxima * separacionHorizontal +
+            170
+        ),
+        alto: Math.max(
+          230,
+          margenY * 2 +
+            Math.max(indiceHoja - 1, 0) *
+              separacionVertical
+        )
+      };
+    }
+
+    function crearElementoSVG(nombre, atributos) {
+      const elemento = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        nombre
+      );
+
+      Object.keys(atributos || {}).forEach(function(clave) {
+        elemento.setAttribute(clave, atributos[clave]);
+      });
+
+      return elemento;
+    }
+
+    function dividirTexto(texto, maximoCaracteres) {
+      const palabras = String(texto).split(/\s+/);
+      const lineas = [];
+      let linea = "";
+
+      palabras.forEach(function(palabra) {
+        const propuesta = linea
+          ? linea + " " + palabra
+          : palabra;
+
+        if (
+          propuesta.length > maximoCaracteres &&
+          linea
+        ) {
+          lineas.push(linea);
+          linea = palabra;
+        } else {
+          linea = propuesta;
+        }
+      });
+
+      if (linea) {
+        lineas.push(linea);
+      }
+
+      return lineas.slice(0, 3);
+    }
+
+    function dibujarEtiquetaArista(
+      svg,
+      texto,
+      x,
+      y,
+      clase
+    ) {
+      const grupo = crearElementoSVG("g", {
+        class: "grupo-arista " + clase
+      });
+
+      const textoReducido =
+        texto.length > 36
+          ? texto.slice(0, 33) + "..."
+          : texto;
+
+      const ancho = Math.min(
+        215,
+        Math.max(95, textoReducido.length * 6.7 + 18)
+      );
+
+      grupo.appendChild(
+        crearElementoSVG("rect", {
+          class: "etiqueta-arista-fondo",
+          x: x - ancho / 2,
+          y: y - 15,
+          width: ancho,
+          height: 30,
+          rx: 8
+        })
+      );
+
+      const textoSVG = crearElementoSVG("text", {
+        class: "etiqueta-arista-texto",
+        x: x,
+        y: y
+      });
+
+      textoSVG.textContent = textoReducido;
+      grupo.appendChild(textoSVG);
+      svg.appendChild(grupo);
+    }
+
+    function dibujarAristas(svg, nodo) {
+      nodo.hijos.forEach(function(arista) {
+        const hijo = arista.hijo;
+        const inicioX = nodo.x + 62;
+        const inicioY = nodo.y;
+        const finX = hijo.oculto
+          ? hijo.x - 46
+          : hijo.x - 62;
+        const finY = hijo.y;
+        const controlX = (inicioX + finX) / 2;
+
+        let clase = "arista";
+
+        if (arista.seleccionada) {
+          clase += " seleccionada";
+        } else if (arista.disponible) {
+          clase += " disponible";
+        } else if (!hijo.perteneceRuta) {
+          clase += " atenuada";
+        }
+
+        const camino = crearElementoSVG("path", {
+          class: clase,
+          d:
+            "M " +
+            inicioX +
+            " " +
+            inicioY +
+            " C " +
+            controlX +
+            " " +
+            inicioY +
+            ", " +
+            controlX +
+            " " +
+            finY +
+            ", " +
+            finX +
+            " " +
+            finY
+        });
+
+        svg.appendChild(camino);
+
+        dibujarAristas(svg, hijo);
+      });
+    }
+
+    function dibujarNodos(svg, nodo) {
+      let clase = "nodo-diagrama";
+
+      if (nodo.perteneceRuta) {
+        clase += " seleccionado";
+      }
+
+      if (nodo.actual) {
+        clase += " actual";
+      }
+
+      if (nodo.final) {
+        clase += " final";
+      }
+
+      if (nodo.oculto) {
+        clase += " oculto";
+      }
+
+      if (
+        !nodo.perteneceRuta &&
+        !nodo.oculto
+      ) {
+        clase += " atenuado";
+      }
+
+      const grupo = crearElementoSVG("g", {
+        class: clase,
+        transform: nodo.oculto
+          ? "translate(" +
+            (nodo.x - 46) +
+            "," +
+            (nodo.y - 18) +
+            ")"
+          : "translate(" +
+            (nodo.x - 62) +
+            "," +
+            (nodo.y - 27) +
+            ")"
+      });
+
+      if (nodo.oculto) {
+        grupo.appendChild(
+          crearElementoSVG("rect", {
+            width: 92,
+            height: 36,
+            rx: 10
+          })
+        );
+
+        const lineas = dividirTexto(nodo.etiqueta, 14);
+        const inicioY =
+          18 - ((lineas.length - 1) * 11) / 2;
+
+        lineas.slice(0, 2).forEach(function(linea, indice) {
+          const texto = crearElementoSVG("text", {
+            x: 46,
+            y: inicioY + indice * 11,
+            "dominant-baseline": "middle"
+          });
+
+          texto.textContent = linea;
+          grupo.appendChild(texto);
+        });
+      } else {
+        grupo.appendChild(
+          crearElementoSVG("rect", {
+            width: 124,
+            height: 54,
+            rx: nodo.final ? 18 : 10
+          })
+        );
+
+        const lineas = dividirTexto(nodo.etiqueta, 18);
+        const inicioY =
+          27 - ((lineas.length - 1) * 13) / 2;
+
+        lineas.forEach(function(linea, indice) {
+          const texto = crearElementoSVG("text", {
+            x: 62,
+            y: inicioY + indice * 13,
+            "dominant-baseline": "middle"
+          });
+
+          texto.textContent = linea;
+          grupo.appendChild(texto);
+        });
+      }
+
+      svg.appendChild(grupo);
+
+      nodo.hijos.forEach(function(arista) {
+        dibujarNodos(svg, arista.hijo);
+      });
+    }
+
+    function dibujarDiagrama(mostrarCompleto) {
+      const svg = document.getElementById("svgArbol");
+
+      if (!svg) {
+        return;
+      }
+
+      svg.replaceChildren();
+
+      const raiz = construirArbolVisual(mostrarCompleto);
+      const dimensiones = asignarPosicionesDiagrama(raiz);
+
+      svg.setAttribute(
+        "viewBox",
+        "0 0 " +
+          dimensiones.ancho +
+          " " +
+          dimensiones.alto
+      );
+
+      svg.setAttribute("width", dimensiones.ancho);
+      svg.setAttribute("height", dimensiones.alto);
+
+      dibujarAristas(svg, raiz);
+      dibujarNodos(svg, raiz);
+
+      const viewport = svg.parentElement;
+
+      if (!mostrarCompleto && viewport) {
+        requestAnimationFrame(function() {
+          viewport.scrollLeft = viewport.scrollWidth;
+        });
+      }
+    }
+
+    function crearDiagramaHTML(mostrarCompleto, esFinal) {
+      const titulo = esFinal
+        ? "Recorrido final"
+        : "Árbol de decisiones en construcción";
+
+      const descripcion = esFinal
+        ? "La ruta elegida permanece destacada y las alternativas no seleccionadas se conservan como ramas laterales."
+        : "Todas las opciones de las decisiones recorridas permanecen visibles. Las no elegidas aparecen con su nombre en nodos pequeños laterales; solo la rama seleccionada continúa desarrollándose.";
+
+      return `
+        <section class="diagrama-arbol">
+          <div class="diagrama-encabezado">
+            <div>
+              <h2>${titulo}</h2>
+              <p>${descripcion}</p>
+            </div>
+
+            <div class="leyenda-ruta">
+              Ruta seleccionada
+            </div>
+          </div>
+
+          <div class="diagrama-viewport">
+            <svg
+              id="svgArbol"
+              role="img"
+              aria-label="${titulo}"
+            ></svg>
+          </div>
+        </section>
+      `;
+    }
+
+
+    /* =========================================================
+       5. PROYECCIÓN SIMULADA A CINCO AÑOS
+       ========================================================= */
+
+    function formatearPesos(valor) {
+      return new Intl.NumberFormat("es-CL", {
+        style: "currency",
+        currency: "CLP",
+        maximumFractionDigits: 0
+      }).format(valor);
+    }
+
+    function coberturaPorEvento(planClave, perdida) {
+      if (planClave === "full") {
+        return perdida;
+      }
+
+      if (planClave === "parcial") {
+        return Math.min(
+          perdida,
+          CONFIG_PROYECCION.topeParcialPorEvento
+        );
+      }
+
+      return 0;
+    }
+
+    function generarProyeccion(planClave) {
+      const plan = PLANES[planClave];
+      numeroSimulacionSesion += 1;
+
+      const etiquetaSimulacion =
+        plan.nombre +
+        " · " +
+        idSesion.slice(-6) +
+        " · " +
+        numeroSimulacionSesion;
+
+      let saldo = -CONFIG_PROYECCION.inversionInicial;
+      let totalPerdidaBruta = 0;
+      let totalCobertura = 0;
+      let totalPerdidaNegocio = 0;
+      let robosMenores = 0;
+      let robosMayores = 0;
+      let siniestros = 0;
+
+      const datos = [
+        {
+          Sesion: idSesion,
+          Simulacion: etiquetaSimulacion,
+          Mes: 0,
+          Anio: 0,
+          Plan: plan.nombre,
+          GananciaNeta: 0,
+          Prima: 0,
+          Evento: "Inversión inicial",
+          PerdidaBruta: 0,
+          Cobertura: 0,
+          PerdidaNegocio: 0,
+          SaldoAcumulado: saldo
+        }
+      ];
+
+      function procesarEvento(nombre, perdida) {
+        const cobertura = coberturaPorEvento(planClave, perdida);
+        const perdidaNegocio = perdida - cobertura;
+
+        totalPerdidaBruta += perdida;
+        totalCobertura += cobertura;
+        totalPerdidaNegocio += perdidaNegocio;
+
+        return {
+          nombre: nombre,
+          perdida: perdida,
+          cobertura: cobertura,
+          perdidaNegocio: perdidaNegocio
+        };
+      }
+
+      for (let mes = 1; mes <= CONFIG_PROYECCION.meses; mes += 1) {
+        const eventos = [];
+
+        if (Math.random() < CONFIG_PROYECCION.probRoboMenorMensual) {
+          robosMenores += 1;
+          eventos.push(
+            procesarEvento(
+              "Robo menor",
+              CONFIG_PROYECCION.perdidaRoboMenor
+            )
+          );
+        }
+
+        if (Math.random() < CONFIG_PROYECCION.probRoboMayorMensual) {
+          robosMayores += 1;
+          eventos.push(
+            procesarEvento(
+              "Robo mayor",
+              CONFIG_PROYECCION.perdidaRoboMayor
+            )
+          );
+        }
+
+        if (
+          mes % 12 === 0 &&
+          Math.random() < CONFIG_PROYECCION.probSiniestroAnual
+        ) {
+          siniestros += 1;
+          eventos.push(
+            procesarEvento(
+              "Siniestro catastrófico",
+              CONFIG_PROYECCION.perdidaSiniestro
+            )
+          );
+        }
+
+        const perdidaBrutaMes = eventos.reduce(
+          function(total, evento) {
+            return total + evento.perdida;
+          },
+          0
+        );
+
+        const coberturaMes = eventos.reduce(
+          function(total, evento) {
+            return total + evento.cobertura;
+          },
+          0
+        );
+
+        const perdidaNegocioMes = eventos.reduce(
+          function(total, evento) {
+            return total + evento.perdidaNegocio;
+          },
+          0
+        );
+
+        saldo +=
+          CONFIG_PROYECCION.gananciaNetaMensual -
+          plan.primaMensual -
+          perdidaNegocioMes;
+
+        datos.push({
+          Sesion: idSesion,
+          Simulacion: etiquetaSimulacion,
+          Mes: mes,
+          Anio: Math.ceil(mes / 12),
+          Plan: plan.nombre,
+          GananciaNeta: CONFIG_PROYECCION.gananciaNetaMensual,
+          Prima: plan.primaMensual,
+          Evento:
+            eventos.length > 0
+              ? eventos.map(function(evento) {
+                  return evento.nombre;
+                }).join(" + ")
+              : "Sin evento",
+          PerdidaBruta: perdidaBrutaMes,
+          Cobertura: coberturaMes,
+          PerdidaNegocio: perdidaNegocioMes,
+          SaldoAcumulado: saldo
+        });
+      }
+
+      return {
+        datos: datos,
+        resumen: {
+          simulacion: etiquetaSimulacion,
+          plan: plan.nombre,
+          totalPrimas:
+            plan.primaMensual * CONFIG_PROYECCION.meses,
+          robosMenores: robosMenores,
+          robosMayores: robosMayores,
+          siniestros: siniestros,
+          totalPerdidaBruta: totalPerdidaBruta,
+          totalCobertura: totalCobertura,
+          totalPerdidaNegocio: totalPerdidaNegocio,
+          saldoFinal: saldo
+        }
+      };
+    }
+
+    function crearProyeccionHTML(planClave) {
+      const plan = PLANES[planClave];
+
+      return `
+        <section class="proyeccion-panel">
+          <h2>Proyección simulada: ${escaparHTML(plan.nombre)}</h2>
+
+          <p class="proyeccion-explicacion">
+            Esta es una trayectoria posible de 60 meses. Los eventos se
+            generan aleatoriamente según las tasas presentadas en la
+            actividad, por lo que una nueva simulación puede producir un
+            resultado diferente.
+          </p>
+
+          <div id="resumenProyeccion" class="resumen-proyeccion"></div>
+
+          <div class="acciones-proyeccion">
+            <button
+              id="botonSimularNuevamente"
+              class="boton-principal"
+              type="button"
+            >
+              Simular nuevamente
+            </button>
+
+            <button
+              id="botonReiniciar"
+              class="boton-secundario"
+              type="button"
+            >
+              Comenzar una nueva decisión
+            </button>
+          </div>
+
+          <div id="estadoProyeccion" class="estado-proyeccion"></div>
+
+          <div class="supuestos-proyeccion">
+            <strong>Supuestos utilizados:</strong>
+            robo menor ${formatearPesos(CONFIG_PROYECCION.perdidaRoboMenor)};
+            robo mayor ${formatearPesos(CONFIG_PROYECCION.perdidaRoboMayor)};
+            siniestro catastrófico
+            ${formatearPesos(CONFIG_PROYECCION.perdidaSiniestro)}.
+            El seguro parcial cubre hasta
+            ${formatearPesos(CONFIG_PROYECCION.topeParcialPorEvento)}
+            por evento. Estos montos se pueden modificar en
+            <code>CONFIG_PROYECCION</code>.
+          </div>
+        </section>
+      `;
+    }
+
+    function mostrarResumenProyeccion(resumen) {
+      const contenedor = document.getElementById("resumenProyeccion");
+
+      if (!contenedor) {
+        return;
+      }
+
+      contenedor.innerHTML = `
+        <div class="dato-proyeccion">
+          <span>Plan final</span>
+          <strong>${escaparHTML(resumen.plan)}</strong>
+        </div>
+
+        <div class="dato-proyeccion">
+          <span>Primas en 5 años</span>
+          <strong>${formatearPesos(resumen.totalPrimas)}</strong>
+        </div>
+
+        <div class="dato-proyeccion">
+          <span>Robos menores</span>
+          <strong>${resumen.robosMenores}</strong>
+        </div>
+
+        <div class="dato-proyeccion">
+          <span>Robos mayores</span>
+          <strong>${resumen.robosMayores}</strong>
+        </div>
+
+        <div class="dato-proyeccion">
+          <span>Siniestros catastróficos</span>
+          <strong>${resumen.siniestros}</strong>
+        </div>
+
+        <div class="dato-proyeccion">
+          <span>Pérdidas brutas</span>
+          <strong>${formatearPesos(resumen.totalPerdidaBruta)}</strong>
+        </div>
+
+        <div class="dato-proyeccion">
+          <span>Cubierto por el seguro</span>
+          <strong>${formatearPesos(resumen.totalCobertura)}</strong>
+        </div>
+
+        <div class="dato-proyeccion">
+          <span>Pérdida asumida por el negocio</span>
+          <strong>${formatearPesos(resumen.totalPerdidaNegocio)}</strong>
+        </div>
+
+        <div class="dato-proyeccion destacado">
+          <span>Saldo acumulado al finalizar 5 años</span>
+          <strong>${formatearPesos(resumen.saldoFinal)}</strong>
+        </div>
+      `;
+    }
+
+    function ejecutarProyeccion() {
+      const estado = document.getElementById("estadoProyeccion");
+      const boton = document.getElementById("botonSimularNuevamente");
+
+      if (!planFinalActual) {
+        return;
+      }
+
+      if (boton) {
+        boton.disabled = true;
+        boton.textContent = "Simulando...";
+      }
+
+      const resultado = generarProyeccion(planFinalActual);
+      mostrarResumenProyeccion(resultado.resumen);
+
+      if (estado) {
+        estado.textContent = codapListo
+          ? "Guardando la trayectoria en la tabla y el gráfico de CODAP..."
+          : "La simulación se muestra aquí, pero CODAP todavía no está conectado.";
+      }
+
+      const guardado = codapListo
+        ? guardarProyeccionEnCodap(resultado.datos)
+        : Promise.resolve();
+
+      guardado
+        .then(function() {
+          if (estado) {
+            estado.textContent = codapListo
+              ? "Proyección agregada a CODAP. Puedes verla en la tabla y en el gráfico."
+              : "Simulación completada.";
+          }
+        })
+        .catch(function(error) {
+          console.error("Error al guardar la proyección:", error);
+
+          if (estado) {
+            estado.textContent =
+              "La simulación se completó, pero no pudo guardarse en CODAP.";
+          }
+        })
+        .finally(function() {
+          if (boton) {
+            boton.disabled = false;
+            boton.textContent = "Simular nuevamente";
+          }
+        });
+    }
+
+    function mostrarNodo() {
+      const nodo = arbol[nodoActual];
+      const contenido = document.getElementById("contenido");
+
+      if (!nodo) {
+        contenido.innerHTML = `
+          <div class="mensaje error">
+            El nodo "${escaparHTML(nodoActual)}" no existe en el árbol.
+          </div>
+        `;
+        return;
+      }
+
+      inicioNodo = Date.now();
+
+      if (nodo.tipo === "decision") {
+        contenido.innerHTML = `
+          <div class="etiqueta">${escaparHTML(nodo.etiqueta)}</div>
+          <h1>${escaparHTML(nodo.titulo)}</h1>
+          <p class="pregunta">${escaparHTML(nodo.pregunta)}</p>
+
+          <div class="opciones" id="opciones"></div>
+
+          ${crearDiagramaHTML(false, false)}
+
+          ${crearRecorridoHTML()}
+
+          <div class="detalle-sesion">
+            Sesión: ${escaparHTML(idSesion)}
+          </div>
+        `;
+
+        const contenedorOpciones = document.getElementById("opciones");
+
+        nodo.opciones.forEach(function(opcion) {
+          const boton = document.createElement("button");
+          boton.type = "button";
+          boton.textContent = opcion.texto;
+
+          boton.addEventListener("click", function() {
+            elegirOpcion(opcion);
+          });
+
+          contenedorOpciones.appendChild(boton);
+        });
+
+        dibujarDiagrama(false);
+
+        return;
+      }
+
+      if (nodo.tipo === "final") {
+        planFinalActual = nodo.plan;
+
+        contenido.innerHTML = `
+          <div class="etiqueta">${escaparHTML(nodo.etiqueta)}</div>
+          <h1>${escaparHTML(nodo.titulo)}</h1>
+
+          <div class="resultado">
+            ${escaparHTML(nodo.mensaje)}
+          </div>
+
+          ${crearProyeccionHTML(nodo.plan)}
+
+          ${crearDiagramaHTML(false, true)}
+
+          ${crearRecorridoHTML()}
+
+          <div id="mensajeFinal" class="mensaje"></div>
+
+          <div class="detalle-sesion">
+            Sesión: ${escaparHTML(idSesion)}
+          </div>
+        `;
+
+        document
+          .getElementById("botonSimularNuevamente")
+          .addEventListener("click", ejecutarProyeccion);
+
+        document
+          .getElementById("botonReiniciar")
+          .addEventListener("click", reiniciarArbol);
+
+        dibujarDiagrama(false);
+        guardarResultadoFinal();
+        ejecutarProyeccion();
+      }
+    }
+
+    function elegirOpcion(opcion) {
+      const nodo = arbol[nodoActual];
+      const idNodo = nodoActual;
+      const numeroPaso = recorrido.length + 1;
+      const segundos = tiempoEnNodo();
+
+      const decision = {
+        paso: numeroPaso,
+        nodo: idNodo,
+        pregunta: nodo.pregunta,
+        eleccion: opcion.texto,
+        siguiente: opcion.siguiente,
+        tiempoSegundos: segundos
+      };
+
+      recorrido.push(decision);
+
+      agregarRegistroACola({
+        Sesion: idSesion,
+        TipoRegistro: "Decision",
+        Paso: numeroPaso,
+        Nodo: idNodo,
+        Pregunta: nodo.pregunta,
+        Eleccion: opcion.texto,
+        NodoSiguiente: opcion.siguiente,
+        ResultadoFinal: "",
+        RutaCompleta: "",
+        PlanFinal: "",
+        TiempoSegundos: segundos,
+        FechaHora: fechaHoraISO()
+      });
+
+      nodoActual = opcion.siguiente;
+      mostrarNodo();
+    }
+
+    function guardarResultadoFinal() {
+      const mensaje = document.getElementById("mensajeFinal");
+
+      if (mensaje) {
+        mensaje.className = "mensaje";
+        mensaje.textContent = "";
+      }
+
+      if (resultadoFinalGuardado) {
+        if (mensaje) {
+          mensaje.textContent = "Resultado final ya registrado en CODAP.";
+          mensaje.classList.add("exito");
+        }
+        return;
+      }
+
+      const nodoFinal = arbol[nodoActual];
+      const rutaCompleta = recorrido
+        .map(function(decision) {
+          return decision.eleccion;
+        })
+        .join(" → ");
+
+      const registroFinal = {
+        Sesion: idSesion,
+        TipoRegistro: "ResultadoFinal",
+        Paso: recorrido.length + 1,
+        Nodo: nodoActual,
+        Pregunta: "Resultado final",
+        Eleccion: "",
+        NodoSiguiente: "FIN",
+        ResultadoFinal: nodoFinal.mensaje,
+        RutaCompleta: rutaCompleta,
+        PlanFinal: PLANES[nodoFinal.plan].nombre,
+        TiempoSegundos: tiempoEnNodo(),
+        FechaHora: fechaHoraISO()
+      };
+
+      if (mensaje) {
+        mensaje.textContent = "Registrando resultado final en CODAP...";
+        mensaje.classList.add("exito");
+      }
+
+      agregarRegistroACola(registroFinal);
+
+      esperarColaVacia()
+        .then(function() {
+          resultadoFinalGuardado = true;
+
+          if (mensaje) {
+            mensaje.textContent =
+              "Resultado final registrado automáticamente en CODAP.";
+            mensaje.className = "mensaje exito";
+          }
+        })
+        .catch(function(error) {
+          console.error(error);
+
+          if (mensaje) {
+            mensaje.textContent =
+              "No se pudo registrar el resultado final. Revisa la conexión con CODAP e inténtalo nuevamente.";
+            mensaje.className = "mensaje error";
+          }
+        });
+    }
+
+    function esperarColaVacia() {
+      return new Promise(function(resolve, reject) {
+        let intentos = 0;
+        const maximoIntentos = 100;
+
+        const intervalo = setInterval(function() {
+          intentos += 1;
+
+          if (colaRegistros.length === 0 && !enviandoCola) {
+            clearInterval(intervalo);
+            resolve();
+            return;
+          }
+
+          if (intentos >= maximoIntentos) {
+            clearInterval(intervalo);
+            reject(new Error("Tiempo de espera agotado."));
+          }
+        }, 100);
+      });
+    }
+
+    function reiniciarArbol() {
+      nodoActual = "inicio";
+      recorrido = [];
+      idSesion = crearIdSesion();
+      resultadoFinalGuardado = false;
+      numeroSimulacionSesion = 0;
+      planFinalActual = null;
+      mostrarNodo();
+    }
+
+    /* =========================================================
+       6. INICIO DE LA APLICACIÓN
+       ========================================================= */
+
+    mostrarNodo();
+    iniciarCodap();
+  </script>
+</body>
+</html>
