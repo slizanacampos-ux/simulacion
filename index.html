@@ -511,14 +511,14 @@
     const NOMBRE_PLUGIN = "ArbolDecisionesPlugin";
     const TITULO_PLUGIN = "Árbol de decisiones";
 
-    const NOMBRE_CONTEXTO_DECISIONES = "SeguroGroomingV4";
+    const NOMBRE_CONTEXTO_DECISIONES = "SeguroGroomingV5";
     const NOMBRE_COLECCION_DECISIONES = "Decisiones";
-    const NOMBRE_TABLA_DECISIONES = "TablaSeguroGroomingV4";
+    const NOMBRE_TABLA_DECISIONES = "TablaSeguroGroomingV5";
 
-    const NOMBRE_CONTEXTO_PROYECCION = "ProyeccionGroomingV1";
+    const NOMBRE_CONTEXTO_PROYECCION = "ProyeccionGroomingV2";
     const NOMBRE_COLECCION_PROYECCION = "Proyeccion";
-    const NOMBRE_TABLA_PROYECCION = "TablaProyeccionGrooming";
-    const NOMBRE_GRAFICO_PROYECCION = "GraficoProyeccionGrooming";
+    const NOMBRE_TABLA_PROYECCION = "TablaProyeccionGroomingV2";
+    const NOMBRE_GRAFICO_PROYECCION = "GraficoProyeccionGroomingV2";
 
     /*
       Supuestos editables de la simulación.
@@ -691,67 +691,80 @@
       });
     }
 
-    function asegurarComponentes() {
+    function asegurarTablaDecisiones() {
       return obtenerComponentes().then(function(componentes) {
-        const tareas = [];
-
-        if (!componenteExiste(
+        if (componenteExiste(
           componentes,
           NOMBRE_TABLA_DECISIONES,
           "caseTable"
         )) {
-          tareas.push(
-            crearComponente({
-              type: "caseTable",
-              name: NOMBRE_TABLA_DECISIONES,
-              title: "Decisiones sobre seguro de grooming",
-              dataContext: NOMBRE_CONTEXTO_DECISIONES,
-              dimensions: { width: 620, height: 300 },
-              position: "bottom"
-            })
-          );
+          return { success: true };
         }
 
-        if (!componenteExiste(
+        return crearComponente({
+          type: "caseTable",
+          name: NOMBRE_TABLA_DECISIONES,
+          title: "Decisiones sobre seguro de grooming",
+          dataContext: NOMBRE_CONTEXTO_DECISIONES
+        });
+      });
+    }
+
+    function asegurarTablaProyeccion() {
+      return obtenerComponentes().then(function(componentes) {
+        if (componenteExiste(
           componentes,
           NOMBRE_TABLA_PROYECCION,
           "caseTable"
         )) {
-          tareas.push(
-            crearComponente({
-              type: "caseTable",
-              name: NOMBRE_TABLA_PROYECCION,
-              title: "Proyección mensual a 5 años",
-              dataContext: NOMBRE_CONTEXTO_PROYECCION,
-              dimensions: { width: 680, height: 320 },
-              position: "bottom"
-            })
-          );
+          return { success: true };
         }
 
-        if (!componenteExiste(
+        return crearComponente({
+          type: "caseTable",
+          name: NOMBRE_TABLA_PROYECCION,
+          title: "Proyección mensual a 5 años",
+          dataContext: NOMBRE_CONTEXTO_PROYECCION
+        });
+      });
+    }
+
+    function asegurarGraficoProyeccion() {
+      return obtenerComponentes().then(function(componentes) {
+        if (componenteExiste(
           componentes,
           NOMBRE_GRAFICO_PROYECCION,
           "graph"
         )) {
-          tareas.push(
-            crearComponente({
-              type: "graph",
-              name: NOMBRE_GRAFICO_PROYECCION,
-              title: "Saldo acumulado en 5 años",
-              dataContext: NOMBRE_CONTEXTO_PROYECCION,
-              dimensions: { width: 560, height: 380 },
-              position: "bottom",
-              xAttributeName: "Mes",
-              yAttributeName: "SaldoAcumulado",
-              legendAttributeName: "Simulacion",
-              enableNumberToggle: false,
-              pointSize: 0.7
-            })
-          );
+          return { success: true };
         }
 
-        return Promise.all(tareas);
+        /*
+          Se crea después de insertar datos. Usamos solamente las
+          propiedades esenciales para maximizar la compatibilidad.
+        */
+        return crearComponente({
+          type: "graph",
+          name: NOMBRE_GRAFICO_PROYECCION,
+          title: "Saldo acumulado en 5 años",
+          dataContext: NOMBRE_CONTEXTO_PROYECCION,
+          xAttributeName: "Mes",
+          yAttributeName: "SaldoAcumulado",
+          legendAttributeName: "Simulacion"
+        });
+      }).catch(function(error) {
+        /* El gráfico es opcional: la tabla y el plugin deben seguir. */
+        console.warn("No fue posible crear el gráfico automáticamente:", error);
+        return { success: false, error: error };
+      });
+    }
+
+    function prepararRecursosProyeccion() {
+      return asegurarContexto(
+        NOMBRE_CONTEXTO_PROYECCION,
+        plantillaProyeccion
+      ).then(function() {
+        return asegurarTablaProyeccion();
       });
     }
 
@@ -809,20 +822,27 @@
         );
       }
 
-      return codapInterface.sendRequest({
-        action: "create",
-        resource:
-          "dataContext[" +
-          NOMBRE_CONTEXTO_PROYECCION +
-          "].item",
-        values: datos
-      }).then(function(resultado) {
-        if (!resultado || !resultado.success) {
-          throw new Error("CODAP rechazó los datos de la proyección.");
-        }
+      return prepararRecursosProyeccion()
+        .then(function() {
+          return codapInterface.sendRequest({
+            action: "create",
+            resource:
+              "dataContext[" +
+              NOMBRE_CONTEXTO_PROYECCION +
+              "].item",
+            values: datos
+          });
+        })
+        .then(function(resultado) {
+          if (!resultado || !resultado.success) {
+            throw new Error("CODAP rechazó los datos de la proyección.");
+          }
 
-        return resultado;
-      });
+          /* El gráfico se intenta crear después de que ya existen datos. */
+          return asegurarGraficoProyeccion().then(function() {
+            return resultado;
+          });
+        });
     }
 
     function iniciarCodap() {
@@ -844,21 +864,15 @@
         version: "1.0"
       })
       .then(function() {
-        mostrarEstadoCodap("Preparando las tablas y el gráfico...");
+        mostrarEstadoCodap("Preparando la tabla de decisiones...");
 
-        return Promise.all([
-          asegurarContexto(
-            NOMBRE_CONTEXTO_DECISIONES,
-            plantillaDecisiones
-          ),
-          asegurarContexto(
-            NOMBRE_CONTEXTO_PROYECCION,
-            plantillaProyeccion
-          )
-        ]);
+        return asegurarContexto(
+          NOMBRE_CONTEXTO_DECISIONES,
+          plantillaDecisiones
+        );
       })
       .then(function() {
-        return asegurarComponentes();
+        return asegurarTablaDecisiones();
       })
       .then(function() {
         codapListo = true;
@@ -880,7 +894,7 @@
       .catch(function(error) {
         console.error("Error al iniciar CODAP:", error);
         mostrarEstadoCodap(
-          "No fue posible preparar las tablas o el gráfico de CODAP.",
+          "No fue posible preparar la tabla de decisiones de CODAP.",
           "error"
         );
       });
@@ -1894,11 +1908,7 @@
       numeroSimulacionSesion += 1;
 
       const etiquetaSimulacion =
-        plan.nombre +
-        " · " +
-        idSesion.slice(-6) +
-        " · " +
-        numeroSimulacionSesion;
+        plan.nombre + " · " + numeroSimulacionSesion;
 
       let saldo = -CONFIG_PROYECCION.inversionInicial;
       let totalPerdidaBruta = 0;
@@ -2178,7 +2188,7 @@
         .then(function() {
           if (estado) {
             estado.textContent = codapListo
-              ? "Proyección agregada a CODAP. Puedes verla en la tabla y en el gráfico."
+              ? "Proyección agregada a CODAP. Puedes verla en la tabla; el gráfico se crea automáticamente cuando CODAP lo permite."
               : "Simulación completada.";
           }
         })
